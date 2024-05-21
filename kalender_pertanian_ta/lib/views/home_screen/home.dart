@@ -1,8 +1,14 @@
+import 'dart:convert';
+
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:kalender_pertanian_ta/consts/global.colors.dart';
+import 'package:kalender_pertanian_ta/model/weathermodel.dart';
+import 'package:kalender_pertanian_ta/views/home_screen/infotertinggi.dart';
+import 'package:kalender_pertanian_ta/views/profile_screen/profilescreen.dart';
 import 'package:kalender_pertanian_ta/widgets/button_global.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
+import 'package:http/http.dart' as http;
 
 class HomeTest extends StatefulWidget {
   const HomeTest({super.key});
@@ -33,6 +39,33 @@ class _HomeTestState extends State<HomeTest> {
 
   String? selectedValue;
   final TextEditingController textEditingController = TextEditingController();
+  late Future<WeatherModel> weatherData;
+
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   weatherData = _getWeatherFromUrl('https://agricalbackend-production.up.railway.app/latestweathercondition');
+  // }
+
+  // Future<WeatherModel> _getWeatherFromUrl(String url) async {
+  //   final response = await http.get(Uri.parse(url));
+  //   print(response.body);
+
+  //   if (response.statusCode == 200) {
+  //     return WeatherModel.fromJson(json.decode(response.body));
+  //   } else {
+  //     throw Exception('Failed to load weather data');
+  //   }
+  // }
+
+  Future getWeather() async {
+    var response = await http.get(Uri.https('agricalbackend-production.up.railway.app', 'latestweathercondition'));
+    var jsonData = jsonDecode(response.body);
+    for (var weatherData in jsonData['data']) {
+      final weatherModel = WeatherModel(dateInfo: weatherData['dateInfo'], time: weatherData['time'], weatherIcon: weatherData['weatherIcon'], iconPhrase: weatherData['iconPhrase'], temperature: weatherData['temperature']);
+
+    } 
+  }
 
   @override
   void dispose() {
@@ -46,276 +79,302 @@ class _HomeTestState extends State<HomeTest> {
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
-          child: Column(children: [
-            // Greetings
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Hai, Juan!
-                Column(
-                  children: [
-                    Text(
-                      'Hai, Juan!',
-                      style: TextStyle(
-                          color: GlobalColors.textMainColor,
-                          fontSize: 24,
-                          fontFamily: 'Inter',
-                          fontWeight: FontWeight.w700),
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Greetings
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Hai, Juan!
+                  Text(
+                    'Hai, Juan!',
+                    style: TextStyle(
+                        color: GlobalColors.textMainColor,
+                        fontSize: 24,
+                        fontFamily: 'Inter',
+                        fontWeight: FontWeight.w700
                     ),
-                  ],
-                ),
+                  ),
+                  // Notification icon
+                  Row(
+                    children: [
+                      IconButton(
+                        onPressed: () {
 
-                // Notification icon
-                Row(
-                  children: [
-                    Icon(
-                      Icons.notifications,
-                      color: GlobalColors.textMainColor,
-                    ),
-                    const SizedBox(width: 10),
-                    Icon(
-                      Icons.account_circle,
-                      color: GlobalColors.textMainColor,
-                    ),
-                  ],
-                )
-              ],
-            ),
-            const SizedBox(height: 20),
+                        }, 
+                        icon: Icon(Icons.notifications)
+                      ),
+                      // const SizedBox(width: 10),
+                      IconButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => ProfileScreen())
+                          );
+                        }, 
+                        icon: Icon(Icons.account_circle)
+                      ),
+                    ],
+                  )
+                ],
+              ),
+              const SizedBox(height: 10),
 
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    // search bar
-                    DropdownButtonHideUnderline(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                              color: GlobalColors.textColor, width: 1.0),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: DropdownButton2<String>(
-                          isExpanded: true,
-                          hint: Text(
-                            'Pilih Lokasi',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Theme.of(context).hintColor,
-                            ),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      // search bar
+                      DropdownButtonHideUnderline(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                                color: GlobalColors.textColor, width: 1.0),
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                          items: items
-                              .map((item) => DropdownMenuItem(
-                                    value: item,
-                                    child: Text(
-                                      item,
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                  ))
-                              .toList(),
-                          value: selectedValue,
-                          onChanged: (value) {
-                            setState(() {
-                              selectedValue = value;
-                            });
-                          },
-                          buttonStyleData: const ButtonStyleData(
-                              padding: EdgeInsets.only(left: 0, right: 9),
-                              height: 40),
-                          dropdownStyleData: const DropdownStyleData(
-                            maxHeight: 200,
-                          ),
-                          menuItemStyleData: const MenuItemStyleData(
-                            height: 40,
-                          ),
-                          dropdownSearchData: DropdownSearchData(
-                            searchController: textEditingController,
-                            searchInnerWidgetHeight: 50,
-                            searchInnerWidget: Container(
-                              height: 50,
-                              padding: const EdgeInsets.only(
-                                top: 8,
-                                bottom: 8,
-                                right: 8,
-                                left: 8,
+                          child: DropdownButton2<String>(
+                            isExpanded: true,
+                            hint: Text(
+                              'Pilih Lokasi',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Theme.of(context).hintColor,
                               ),
-                              child: TextFormField(
-                                expands: true,
-                                maxLines: null,
-                                controller: textEditingController,
-                                decoration: InputDecoration(
-                                  isDense: true,
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 8,
-                                  ),
-                                  hintText: 'Cari Lokasi',
-                                  hintStyle: const TextStyle(fontSize: 14),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
+                            ),
+                            items: items
+                                .map((item) => DropdownMenuItem(
+                                      value: item,
+                                      child: Text(
+                                        item,
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                    ))
+                                .toList(),
+                            value: selectedValue,
+                            onChanged: (value) {
+                              setState(() {
+                                selectedValue = value;
+                              });
+                            },
+                            buttonStyleData: const ButtonStyleData(
+                                padding: EdgeInsets.only(left: 0, right: 9),
+                                height: 40),
+                            dropdownStyleData: const DropdownStyleData(
+                              maxHeight: 200,
+                            ),
+                            menuItemStyleData: const MenuItemStyleData(
+                              height: 40,
+                            ),
+                            dropdownSearchData: DropdownSearchData(
+                              searchController: textEditingController,
+                              searchInnerWidgetHeight: 50,
+                              searchInnerWidget: Container(
+                                height: 50,
+                                padding: const EdgeInsets.only(
+                                  top: 8,
+                                  bottom: 8,
+                                  right: 8,
+                                  left: 8,
+                                ),
+                                child: TextFormField(
+                                  expands: true,
+                                  maxLines: null,
+                                  controller: textEditingController,
+                                  decoration: InputDecoration(
+                                    isDense: true,
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 8,
+                                    ),
+                                    hintText: 'Cari Lokasi',
+                                    hintStyle: const TextStyle(fontSize: 14),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
                                   ),
                                 ),
                               ),
+                              searchMatchFn: (item, searchValue) {
+                                return item.value
+                                    .toString()
+                                    .contains(searchValue);
+                              },
                             ),
-                            searchMatchFn: (item, searchValue) {
-                              return item.value
-                                  .toString()
-                                  .contains(searchValue);
+                            //This to clear the search value when you close the menu
+                            onMenuStateChange: (isOpen) {
+                              if (!isOpen) {
+                                textEditingController.clear();
+                              }
                             },
                           ),
-                          //This to clear the search value when you close the menu
-                          onMenuStateChange: (isOpen) {
-                            if (!isOpen) {
-                              textEditingController.clear();
-                            }
-                          },
                         ),
                       ),
-                    ),
 
-                    // Cuaca hari ini
-                    Container(
-                      margin: const EdgeInsets.only(top: 20),
-                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-                      width: double.infinity, // menyesuaikan dengan layar
-                      decoration: BoxDecoration(
-                        color: GlobalColors.mainColor,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Column(
-                        children: [
-                          const Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Senin, 26 Februari 2024',
+                      
+
+                      // Cuaca hari ini
+                      FutureBuilder(
+                        future: getWeather(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return CircularProgressIndicator();
+                          } else if (snapshot.hasError) {
+                            return Text('Error: ${snapshot.error}');
+                          } else if (!snapshot.hasData) {
+                            return Text('No data available');
+                          } else {
+                            final weather = snapshot.data;
+                            return Container(
+                              margin: const EdgeInsets.only(top: 20),
+                              padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                              width: double.infinity, // menyesuaikan dengan layar
+                              decoration: BoxDecoration(
+                                color: GlobalColors.mainColor,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Column(
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              weather!.dateInfo,
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 18,
+                                                fontFamily: 'Inter',
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ]),
+                                      Column(
+                                        crossAxisAlignment: CrossAxisAlignment.end,
+                                        children: [
+                                          Text(
+                                            'Hari Ini',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 18,
+                                              fontFamily: 'Inter',
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                          Text(
+                                            weather.time,
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 18,
+                                              fontFamily: 'Inter',
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+
+                                  // icon cuaca
+                                  Container(
+                                    margin: const EdgeInsets.only(top: 20),
+                                    alignment: Alignment.center,
+                                    child: Image.asset(
+                                      'assets/images/cerahberawan.png',
+                                      width: 130,
+                                      height: 100,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        '${weather.temperature}',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 90,
+                                          fontFamily: 'Inter',
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      RichText(
+                                          text: const TextSpan(
+                                        text: '°',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 20, // Ukuran simbol derajat
+                                          fontFamily: 'Inter',
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                        children: [
+                                          TextSpan(
+                                            text: 'C',
+                                            style: TextStyle(
+                                              fontSize: 14, // Ukuran huruf 'C'
+                                            ),
+                                          ),
+                                        ],
+                                      )),
+                                    ],
+                                  ),
+
+                                  Text(weather.iconPhrase,
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 18,
                                         fontFamily: 'Inter',
                                         fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ]),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    'Hari Ini',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 18,
-                                      fontFamily: 'Inter',
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  Text(
-                                    '08:00',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 18,
-                                      fontFamily: 'Inter',
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
+                                      )),
                                 ],
                               ),
-                            ],
-                          ),
-
-                          // icon cuaca
-                          Container(
-                            margin: const EdgeInsets.only(top: 20),
-                            alignment: Alignment.center,
-                            child: Image.asset(
-                              'assets/images/cerahberawan.png',
-                              width: 130,
-                              height: 100,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-
-                          Row(
-                            // crossAxisAlignment: CrossAxisAlignment.baseline,
-                            // textBaseline: TextBaseline.alphabetic,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Text(
-                                '21',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 90,
-                                  fontFamily: 'Inter',
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              RichText(
-                                  text: const TextSpan(
-                                text: '°',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 20, // Ukuran simbol derajat
-                                  fontFamily: 'Inter',
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                children: [
-                                  TextSpan(
-                                    text: 'C',
-                                    style: TextStyle(
-                                      fontSize: 14, // Ukuran huruf 'C'
-                                    ),
-                                  ),
-                                ],
-                              )),
-                            ],
-                          ),
-
-                          const Text('Cerah berawan',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontFamily: 'Inter',
-                                fontWeight: FontWeight.w500,
-                              )),
-                          const SizedBox(height: 25),
-
-                          GlobalButtonn(
-                            onTap: () {},
-                            buttonColor: Colors.white,
-                            buttonText: 'Lihat Selengkapnya',
-                            buttonTextColor: GlobalColors.mainColor,
-                            fontSize: 14,
-                            buttonHeight: 50,
-                          ),
-                          const SizedBox(height: 25),
-
-                          const Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              Text('Terakhir diperbarui 30 menit lalu',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                    fontFamily: 'Inter',
-                                    fontWeight: FontWeight.w500,
-                                  )),
-                            ],
-                          ),
-                        ],
+                            );
+                          }
+                        },
                       ),
-                    ),
-                    const SizedBox(height: 16),
 
-                    // Volume Penjualan Tanaman
-                    SfCartesianChart(
+                      const SizedBox(height: 15),
+
+                      // Info hasil tertinggi
+                      PenjualanTertinggi(),
+
+                      const SizedBox(height: 15),
+
+                      // Grafik harga hasil pertanian
+                      Container(
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                        width: double.infinity, // menyesuaikan dengan layar
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Grafik Harga Hasil Pertanian',
+                                  style: TextStyle(
+                                    color: GlobalColors.textMainColor,
+                                    fontSize: 18,
+                                    fontFamily: 'Inter',
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 20),
+                            SfCartesianChart(
                         primaryXAxis: const CategoryAxis(),
                         // Chart title
                         title: const ChartTitle(
@@ -343,15 +402,30 @@ class _HomeTestState extends State<HomeTest> {
                               dataLabelSettings:
                                   const DataLabelSettings(isVisible: true))
                         ]),
-                  ],
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            )
-          ]),
+            ],
+          ),
         ),
       ),
     );
   }
+
+  // Future<WeatherModel> _getWeatherFromUrl(String url) async {
+  //   final response = await http.get(Uri.parse(url));
+  //   print(response.body);
+
+  //   if (response.statusCode == 200) {
+  //     return WeatherModel.fromJson(json.decode(response.body));
+  //   } else {
+  //     throw Exception('Failed to load weather data');
+  //   }
+  // }
 }
 
 class _SalesData {
